@@ -63,7 +63,7 @@ class MainViewModelTest {
         val fakeRepository = FakeRepository()
         fakeRepository.shouldReturnNetworkError = true
         viewModel = MainViewModel(fakeRepository, FakeDispatcherProvider(testDispatcher, testDispatcher, testDispatcher, testDispatcher))
-        viewModel.getLatestRates()
+        viewModel.convertAmount("USD","SGD","1")
         val value = viewModel.pairRateLiveData.getOrAwaitValue()
         assertThat(value.data).isNull()
         assertThat(value.message).isNotEmpty()
