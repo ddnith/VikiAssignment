@@ -117,7 +117,7 @@ class MainActivity : AppCompatActivity() {
 
         convertButton.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
-                if (!isNetworkConnected()) {
+                if (!isInternetAvailable(this@MainActivity)) {
                     Toast.makeText(
                         this@MainActivity,
                         "Host unreachable, check your internet connection and try again",
@@ -144,11 +144,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-    }
-
-    fun isNetworkConnected(): Boolean {
-        // TODO: Check if connected to internet
-        return true
     }
 
     internal inner class FromDropdown : AdapterView.OnItemSelectedListener {
