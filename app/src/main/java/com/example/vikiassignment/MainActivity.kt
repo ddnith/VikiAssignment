@@ -8,7 +8,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
+import com.example.vikiassignment.utils.Resource
 import com.example.vikiassignment.viewmodel.MainViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -30,36 +30,60 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupUI()
-        setUpViewModel()
-        setUpInitialData()
+        setUpViewModelObservers()
+        setInitialData()
+        requestData()
     }
 
-    private fun setUpInitialData() {
+    private fun requestData() {
+        mainViewModel.getLatestRates()
+    }
+
+    private fun setInitialData() {
         fromInput.setText(mainViewModel.fromCurrencyValue)
         toOutput.setText(mainViewModel.toCurrencyValue)
     }
 
-    private fun setUpViewModel() {
+    private fun setUpViewModelObservers() {
         progressBar.visibility = VISIBLE
-        mainViewModel.getLatestRates()
-        mainViewModel.observeLatestRatesLiveData().observe(this, Observer { latest -> if (latest != null) {
+        mainViewModel.observeLatestRatesLiveData().observe(this) { response ->
             progressBar.visibility = GONE
-            val fromAdapter: ArrayAdapter<String> =
-                ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_spinner_item, latest.conversionRates.keys.toList())
-            fromDropdown.adapter = fromAdapter
+            if (response is Resource.Success) {
+                val latest = response.data!!
+                val fromAdapter: ArrayAdapter<String> =
+                    ArrayAdapter<String>(
+                        this@MainActivity,
+                        android.R.layout.simple_spinner_item,
+                        latest.conversionRates.keys.toList()
+                    )
+                fromDropdown.adapter = fromAdapter
 
-            val toAdapter: ArrayAdapter<String> =
-                ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_spinner_item, latest.conversionRates.keys.toList())
-            toDropdown.adapter = toAdapter
-            fromDropdown.setSelection(mainViewModel.fromCurrencyPosition)
-            toDropdown.setSelection(mainViewModel.toCurrencyPosition)
+                val toAdapter: ArrayAdapter<String> =
+                    ArrayAdapter<String>(
+                        this@MainActivity,
+                        android.R.layout.simple_spinner_item,
+                        latest.conversionRates.keys.toList()
+                    )
+                toDropdown.adapter = toAdapter
+                fromDropdown.setSelection(mainViewModel.fromCurrencyPosition)
+                toDropdown.setSelection(mainViewModel.toCurrencyPosition)
+            } else {
+                showError(response.message!!)
+            }
         }
-        })
-        mainViewModel.observePairRateLiveData().observe(this, Observer {
-                pairAmount ->
+        mainViewModel.observePairRateLiveData().observe(this) { response ->
             progressBar.visibility = GONE
-            toOutput.setText(pairAmount.conversionResult.toString())
-        })
+            if (response is Resource.Success) {
+                toOutput.setText(response.data!!.conversionResult.toString())
+            } else {
+                showError(response.message!!)
+            }
+        }
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
+
     }
 
     private fun setupUI() {
@@ -109,30 +133,29 @@ class MainActivity : AppCompatActivity() {
         convertButton.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
                 if (!isInternetAvailable(this@MainActivity)) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Host unreachable, check your internet connection and try again",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                if (fromCurrency === toCurrency) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "from and to values are same.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return
-                } else if (fromInput.text.toString().isEmpty()) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Please enter a value to convert.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return
+                    showError("Host unreachable, check your internet connection and try again")
                 } else {
                     progressBar.visibility = VISIBLE
-                    mainViewModel.getPairAmount(fromCurrency, toCurrency, fromInput.text.toString())
+                    mainViewModel.convertAmount(fromCurrency, toCurrency, fromInput.text.toString())
                 }
+//                if (fromCurrency === toCurrency) {
+//                    Toast.makeText(
+//                        this@MainActivity,
+//                        "from and to values are same.",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                    return
+//                } else if (fromInput.text.toString().isEmpty()) {
+//                    Toast.makeText(
+//                        this@MainActivity,
+//                        "Please enter a value to convert.",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                    return
+//                } else {
+//                    progressBar.visibility = VISIBLE
+//                    mainViewModel.convertAmount(fromCurrency, toCurrency, fromInput.text.toString())
+//                }
             }
         })
     }

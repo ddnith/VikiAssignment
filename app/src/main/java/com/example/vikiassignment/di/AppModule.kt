@@ -3,7 +3,10 @@ package com.example.vikiassignment.di
 import com.example.vikiassignment.model.ApiInterface
 import com.example.vikiassignment.model.repository.MainRepository
 import com.example.vikiassignment.model.repository.MainRepositoryImpl
+import com.example.vikiassignment.utils.DispatcherProvider
 import com.example.vikiassignment.viewmodel.MainViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -34,5 +37,19 @@ val appModule = module {
 
     single<MainRepository> { MainRepositoryImpl(get()) }
 
-    viewModel() { MainViewModel(get())}
+    single<DispatcherProvider> {
+        object : DispatcherProvider {
+            override val main: CoroutineDispatcher
+                get() = Dispatchers.Main
+            override val io: CoroutineDispatcher
+                get() = Dispatchers.IO
+            override val default: CoroutineDispatcher
+                get() = Dispatchers.Default
+            override val unconfined: CoroutineDispatcher
+                get() = Dispatchers.Unconfined
+
+        }
+    }
+
+    viewModel() { MainViewModel(get(), get())}
 }
