@@ -16,8 +16,8 @@ class MainViewModel(
     private val mainRepository: MainRepository,
     private val dispatcherProvider: DispatcherProvider
     ): ViewModel() {
-    private val latestRatesLiveData = MutableLiveData<Resource<LatestRates>>()
-    private val pairRateLiveData = MutableLiveData<Resource<PairAmount>>()
+    val latestRatesLiveData = MutableLiveData<Resource<LatestRates>>()
+    val pairRateLiveData = MutableLiveData<Resource<PairAmount>>()
 
     var fromCurrencyPosition = 0
     var toCurrencyPosition = 1
